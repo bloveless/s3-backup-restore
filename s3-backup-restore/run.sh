@@ -20,17 +20,17 @@ restore() {
     echo "RESTORE_DATE: $RESTORE_DATE"
   fi
 
-  set -x
   eval aws s3 sync "$S3_PATH/$RESTORE_DATE" "$DATA_DIRECTORY" "$RESTORE_ARGS"
-  set +x
+
+  echo "Restored from backup: $RESTORE_DATE"
 }
 
 backup() {
   echo "Uploding data directory ($DATA_DIRECTORY) to s3 path ($S3_PATH)"
 
-  set -x
   eval aws s3 sync "$DATA_DIRECTORY" "$S3_FULL_PATH" "$BACKUP_ARGS"
-  set +x
+
+  echo "Backup complete: $CUR_DATE"
 }
 
 if [ "$DATA_FILES_COUNT" -eq 0 ] || [ "$RESTORE_FORCE" = "true" ]; then
