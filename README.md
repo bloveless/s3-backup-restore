@@ -7,10 +7,10 @@ Allow forced restores which will overwrite everything in the mounted volume.
 Force restores can be done either for a specific time or the latest.
 
 ## Goals
--[x] Accept credentials through docker secrets and env variables.
--[ ] Backup to s3 on some cadence (configurable).
--[x] If the directory is empty then restore from the latest backup automatically.
--[x] Allow for disabling backup and/or restore.
+- [x] Accept credentials through docker secrets and env variables.
+- [ ] Backup to s3 on some cadence (configurable).
+- [x] If the directory is empty then restore from the latest backup automatically.
+- [x] Allow for disabling backup and/or restore.
 
 ## Config
 You'll need to pass in the AWS_ACCESS_KEY and AWS_SECRET_KEY either using environment variables or docker secrets.
