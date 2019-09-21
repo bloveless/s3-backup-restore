@@ -21,6 +21,9 @@ You can configure the backup and restore using the following environment variabl
 
 `AWS_REGION`: The AWS region you are targeting. I.E. "us-west-2"
 
+`BACKUP_SKIP`: Set to "true" to skip the backup. Useful, for example, in an init container where you specifically want to target
+restoring. 
+
 `DATA_DIRECTORY`: The directory where the volume is mounted and where the backup and restore will occur. By default
 this is set to "/data".
 
