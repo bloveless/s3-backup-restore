@@ -1,7 +1,7 @@
 FROM python:3.8-rc-alpine
 
 # groff is added so you can use aws cli help
-RUN apk add --no-cache groff busybox-suid \
+RUN apk add --no-cache groff \
     && pip install awscli \
     && touch /var/log/run.log
 
