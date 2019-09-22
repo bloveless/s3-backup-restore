@@ -7,11 +7,7 @@ services:
       dockerfile: deploy/docker/python/Dockerfile
     environment:
       AWS_REGION: us-west-2
-      BACKUP_CADENCE: "* * * * *"
       DATA_DIRECTORY: /data
-      RESTORE_DATE: latest # "2019-09-21T17:53:29Z"
-      RESTORE_DELETE: "false"
-      RESTORE_FORCE: "false"
       S3_PATH: s3://demon-backup/test-backup
     volumes:
       - ./s3-backup-restore/entrypoint.sh:/home/app/entrypoint.sh

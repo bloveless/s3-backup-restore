@@ -47,7 +47,7 @@ setting for init containers or the container will never exit.
 `RESTORE_ARGS`: Any additional flags you'd like to pass to the aws sync command on restore. I.E. "--follow-symlinks"
 
 `RESTORE_DATE`: Set this if you'd like to restore from a specific date. NOTE: This should exactly match the date folder
-within the S3 bucket. I.E. "2019-09-21T19:35:32Z"
+within the S3 bucket. I.E. "hourly/2019-09-21T19:35:32Z"
 
 `RESTORE_DELETE`: If you like the aws sync command to remove any files locally that don't match your remote backup.
 This adds the --delete flag to the aws sync command.
@@ -55,7 +55,13 @@ I.E. "true"
 
 `RESTORE_FORCE`: If you'd like to force a restore set this to "true".
 
-`S3_PATH`: The s3 bucket and folder you'd like to use. I.E. "s3://backup-bucket/example-app"
+`S3_PATH`: The s3 bucket and folder you'd like to use. Make sure that if you are backing up multiple apps that you
+choose a unique path for each one. Otherwise, you'll clean out backups from another application and restoring will not
+be able to determine which app is being restored. I.E. "s3://backup-bucket/example-app"
+
+`WRITE_BACKUP_DATE`: If set to "true" a file called BACKUP_DATE will be written to the root of the data directory every
+time the folder is backed up. This may help in identifying the last time the data directory was backed up or when
+verifying that a restore has taken place. Defaults to "true".
 
 ## Stretch
 1. Rotated updates with configurable time periods.
