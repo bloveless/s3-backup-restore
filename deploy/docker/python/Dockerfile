@@ -1,16 +1,17 @@
 FROM python:3.8-rc-alpine
 
-RUN adduser -D appuser \
-    && apk add --no-cache groff \
-    && pip install awscli
+# groff is added so you can use aws cli help
+RUN adduser -D app \
+    && apk add --no-cache groff busybox-suid \
+    && pip install awscli \
+    && touch /var/log/run.log \
+    && chown app:app /var/log/run.log
 
-COPY --chown=appuser:appuser ./s3-backup-restore/entrypoint.sh /home/appuser/entrypoint.sh
-COPY --chown=appuser:appuser ./s3-backup-restore/run.sh /home/appuser/run.sh
+COPY ./s3-backup-restore/entrypoint.sh /home/app/entrypoint.sh
+COPY ./s3-backup-restore/run.sh /home/app/run.sh
 
-USER appuser
+WORKDIR "/home/app"
 
-WORKDIR "/home/appuser"
-
-ENTRYPOINT ["/home/appuser/entrypoint.sh"]
+ENTRYPOINT ["/home/app/entrypoint.sh"]
 
 CMD ["./run.sh"]

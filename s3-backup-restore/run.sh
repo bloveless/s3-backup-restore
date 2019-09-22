@@ -1,14 +1,16 @@
 #!/usr/bin/env sh
 set -e
+. "./.env.sh"
 
+BACKUP_ARGS="$BACKUP_ARGS"
 CUR_DATE="$(date --utc +%Y-%m-%dT%H:%M:%S)Z"
 DATA_DIRECTORY="${DATA_DIRECTORY:=/data}"
 DATA_FILES_COUNT=$(find "$DATA_DIRECTORY" -mindepth 1 | wc -l )
+OPERATION=$1
+RESTORE_ARGS="$RESTORE_ARGS"
+RESTORE_DATE="${RESTORE_DATE:=latest}"
 S3_PATH=$(echo "$S3_PATH" | sed -e 's/^\(.*\)\/$/\1/g')
 S3_FULL_PATH="$S3_PATH/$CUR_DATE"
-RESTORE_DATE="${RESTORE_DATE:=latest}"
-RESTORE_ARGS="$RESTORE_ARGS"
-BACKUP_ARGS="$BACKUP_ARGS"
 
 if [ "$RESTORE_DELETE" = "true" ]; then
   RESTORE_ARGS="$RESTORE_ARGS --delete"
@@ -30,16 +32,18 @@ backup() {
 
   eval aws s3 sync "$DATA_DIRECTORY" "$S3_FULL_PATH" "$BACKUP_ARGS"
 
-  echo "Backup complete: $CUR_DATE"
+  echo "$OPERATION backup complete: $CUR_DATE"
 }
 
-if [ "$DATA_FILES_COUNT" -eq 0 ] || [ "$RESTORE_FORCE" = "true" ]; then
-  echo "No files found attempting restore from $RESTORE_DATE."
+if { [ "$OPERATION" = "restore" ] && [ "$DATA_FILES_COUNT" -eq 0 ]; } || [ "$RESTORE_FORCE" = "true" ]; then
+  echo "No files found or restore forced, attempting restore from $RESTORE_DATE."
   restore
 else
   echo "Found files in $DATA_DIRECTORY. And RESTORE_FORCE was not set to \"true\". Skipping restore."
 fi
 
-if [ "$BACKUP_SKIP" != "true" ]; then
-  backup
+if [ "$OPERATION" = "hourly" ] || [ "$OPERATION" = "daily" ] \
+  || [ "$OPERATION" = "weekly" ] || [ "$OPERATION" = "monthly" ];
+then
+  backup "$OPERATION"
 fi

@@ -7,14 +7,15 @@ services:
       dockerfile: deploy/docker/python/Dockerfile
     environment:
       AWS_REGION: us-west-2
-      S3_PATH: s3://demon-backup/test-backup
-      RESTORE_FORCE: "true"
-      RESTORE_DATE: latest # "2019-09-21T17:53:29Z"
-      RESTORE_DELETE: "true"
+      BACKUP_CADENCE: "* * * * *"
       DATA_DIRECTORY: /data
+      RESTORE_DATE: latest # "2019-09-21T17:53:29Z"
+      RESTORE_DELETE: "false"
+      RESTORE_FORCE: "false"
+      S3_PATH: s3://demon-backup/test-backup
     volumes:
-      - ./s3-backup-restore/entrypoint.sh:/home/appuser/entrypoint.sh
-      - ./s3-backup-restore/run.sh:/home/appuser/run.sh
+      - ./s3-backup-restore/entrypoint.sh:/home/app/entrypoint.sh
+      - ./s3-backup-restore/run.sh:/home/app/run.sh
       - ./test-data:/data
     secrets:
       - AWS_ACCESS_KEY

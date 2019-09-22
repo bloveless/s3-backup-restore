@@ -8,9 +8,10 @@ Force restores can be done either for a specific time or the latest.
 
 ## Goals
 - [x] Accept credentials through docker secrets and env variables.
-- [ ] Backup to s3 on some cadence (configurable).
+- [x] Backup to s3 on some cadence (configurable).
 - [x] If the directory is empty then restore from the latest backup automatically.
 - [x] Allow for disabling backup and/or restore.
+- [ ] Clean up backups. See stretch below.
 
 ## Config
 You'll need to pass in the AWS_ACCESS_KEY and AWS_SECRET_KEY either using environment variables or docker secrets.
@@ -21,11 +22,27 @@ You can configure the backup and restore using the following environment variabl
 
 `AWS_REGION`: The AWS region you are targeting. I.E. "us-west-2"
 
-`BACKUP_SKIP`: Set to "true" to skip the backup. Useful, for example, in an init container where you specifically want to target
-restoring. 
+`CADENCE_HOURLY`: Cron schedule for running hourly backups. Defaults to "0 * * * *".
+
+`CADENCE_DAILY`: Cron schedule for running daily backups. Defaults to "10 1 * * *".
+
+`CADENCE_WEEKLY`: Cron schedule for running weekly backups. Defaults to "10 2 * * 0".
+
+`CADENCE_MONTHLY`: Cron schedule for running monthly backups. Defaults to "10 3 1 * *".
 
 `DATA_DIRECTORY`: The directory where the volume is mounted and where the backup and restore will occur. By default
 this is set to "/data".
+
+`ENABLE_SCHEDULE`: If set to false it will disable the schedule and exit after the first restore attempt. Use this
+setting for init containers or the container will never exit.
+
+`NUM_HOURLY_BACKUPS`: The number of hourly backups to keep. Defaults to 3. Can be disabled by setting to 0.
+
+`NUM_DAILY_BACKUPS`: The number of daily backups to keep. Defaults to 3. Can be disabled by setting to 0.
+
+`NUM_WEEKLY_BACKUPS`: The number of weekly backups to keep. Defaults to 3. Can be disabled by setting to 0.
+
+`NUM_MONTLY_BACKUPS`: The number of montly backups to keep. Defaults to 3. Can be disabled by setting to 0.
 
 `RESTORE_ARGS`: Any additional flags you'd like to pass to the aws sync command on restore. I.E. "--follow-symlinks"
 
@@ -46,3 +63,6 @@ I.E. "true"
   2. How many weekly backups would you like to keep?
   3. How many daily backups would you like to keep?
   4. How many hourly backups would you like to keep?
+
+If you aren't going to be using hourly backups or daily backups you can adjust the `BACKUP_CADENCE` variable so the cron
+runs far less frequently. I.E. "0 3 * * *" to only run the job once a day at 3AM.
