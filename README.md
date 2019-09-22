@@ -11,7 +11,7 @@ Force restores can be done either for a specific time or the latest.
 - [x] Backup to s3 on some cadence (configurable).
 - [x] If the directory is empty then restore from the latest backup automatically.
 - [x] Allow for disabling backup and/or restore.
-- [ ] Clean up backups. See stretch below.
+- [x] Clean up backups. See stretch below.
 
 ## Config
 You'll need to pass in the AWS_ACCESS_KEY and AWS_SECRET_KEY either using environment variables or docker secrets.
@@ -21,6 +21,8 @@ and `/run/secrets/AWS_SECRET_KEY`.
 You can configure the backup and restore using the following environment variables:
 
 `AWS_REGION`: The AWS region you are targeting. I.E. "us-west-2"
+
+`BACKUP_ARGS`: Any additional flags you'd like to pass to the aws sync command on backup. I.E. "--follow-symlinks"
 
 `CADENCE_HOURLY`: Cron schedule for running hourly backups. Defaults to "0 * * * *".
 
@@ -70,5 +72,5 @@ verifying that a restore has taken place. Defaults to "true".
   3. How many daily backups would you like to keep?
   4. How many hourly backups would you like to keep?
 
-If you aren't going to be using hourly backups or daily backups you can adjust the `BACKUP_CADENCE` variable so the cron
-runs far less frequently. I.E. "0 3 * * *" to only run the job once a day at 3AM.
+If you aren't going to be using hourly backups or daily backups you can disable those backups by setting the appropriate
+number of backups to 0. I.E. NUM_HOURLY_BACKUPS = 0 and NUM_DAILY_BACKUPS = 0.
