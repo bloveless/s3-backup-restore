@@ -1,17 +1,15 @@
 FROM python:3.8-rc-alpine
 
 # groff is added so you can use aws cli help
-RUN adduser -D app \
-    && apk add --no-cache groff busybox-suid \
+RUN apk add --no-cache groff busybox-suid \
     && pip install awscli \
-    && touch /var/log/run.log \
-    && chown app:app /var/log/run.log
+    && touch /var/log/run.log
 
-COPY ./s3-backup-restore/entrypoint.sh /home/app/entrypoint.sh
-COPY ./s3-backup-restore/run.sh /home/app/run.sh
+COPY ./s3-backup-restore/entrypoint.sh /root/entrypoint.sh
+COPY ./s3-backup-restore/run.sh /root/run.sh
 
-WORKDIR "/home/app"
+WORKDIR "/root"
 
-ENTRYPOINT ["/home/app/entrypoint.sh"]
+ENTRYPOINT ["/root/entrypoint.sh"]
 
 CMD ["./run.sh"]

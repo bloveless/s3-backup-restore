@@ -73,28 +73,38 @@ restore() {
   if [ -n "$RESTORE_DATE" ]; then
     eval aws s3 sync "$S3_PATH/$RESTORE_DATE" "$DATA_DIRECTORY" "$RESTORE_ARGS"
     echo "Restored from backup: $RESTORE_DATE"
+
+    if [ "$CHOWN_ENABLE" = "true" ]; then
+      echo "Applying new owner ($CHOWN_UID) and group ($CHOWN_GID) to restored files"
+      chown -R "$CHOWN_UID:$CHOWN_GID" "$DATA_DIRECTORY"
+    fi
   else
-    echo "No backup was found. Skipping restore."
+    echo "No backup was found. Skipping restore"
   fi
 }
 
 backup() {
-  echo "Uploading data directory ($DATA_DIRECTORY) to s3 path ($S3_PATH)"
-
   if [ "$WRITE_BACKUP_DATE" = "true" ]; then
+    echo "Creating BACKUP_DATE file"
     echo "$OPERATION/$CUR_DATE" > "$DATA_DIRECTORY/BACKUP_DATE"
+
+    if [ "$CHOWN_ENABLE" = "true" ]; then
+      echo "Applying new owner ($CHOWN_UID) and group ($CHOWN_GID) to BACKUP_DATE file"
+      chown -R "$CHOWN_UID:$CHOWN_GID" "$DATA_DIRECTORY/BACKUP_DATE"
+    fi
   fi
 
+  echo "Uploading data directory ($DATA_DIRECTORY) to s3 path ($S3_PATH)"
   eval aws s3 sync "$DATA_DIRECTORY" "$S3_PATH/$1/$CUR_DATE" "$BACKUP_ARGS"
 
   echo "$OPERATION backup complete: $CUR_DATE"
 }
 
 if { [ "$OPERATION" = "restore" ] && [ "$DATA_FILES_COUNT" -eq 0 ]; } || [ "$RESTORE_FORCE" = "true" ]; then
-  echo "No files found or restore forced, attempting restore from $RESTORE_DATE."
+  echo "No files found or restore forced, attempting restore from $RESTORE_DATE"
   restore
 else
-  echo "Found files in $DATA_DIRECTORY. And RESTORE_FORCE was not set to \"true\". Skipping restore."
+  echo "Found files in $DATA_DIRECTORY. And RESTORE_FORCE was not set to \"true\". Skipping restore"
 fi
 
 if [ "$OPERATION" = "hourly" ] || [ "$OPERATION" = "daily" ] \

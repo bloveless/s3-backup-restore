@@ -32,6 +32,13 @@ You can configure the backup and restore using the following environment variabl
 
 `CADENCE_MONTHLY`: Cron schedule for running monthly backups. Defaults to "10 3 1 * *".
 
+`CHOWN_ENABLE`: Enable changing the permissions of files during backup and restore. During backup only the BACKUP_DATE
+file will have it's owner modified. During restore, all restored files will have their owner modified.
+
+`CHOWN_UID`: The UID that will be used when changing the ownership of the files. Defaults to 1000.
+
+`CHOWN_GID`: The GID that will be used when changing the group ownership of the files. Defaults to 1000.
+
 `DATA_DIRECTORY`: The directory where the volume is mounted and where the backup and restore will occur. By default
 this is set to "/data".
 
