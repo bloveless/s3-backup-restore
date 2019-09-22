@@ -18,17 +18,17 @@ NUM_MONTHLY_BACKUPS=${NUM_MONTHLY_BACKUPS:=3}
 WRITE_BACKUP_DATE=${WRITE_BACKUP_DATE:=true}
 
 if [ "$AWS_ACCESS_KEY" = "" ]; then
-  echo "Using AWS_ACCESS_KEY from docker secrets."
+  echo "Using AWS_ACCESS_KEY from docker secrets"
   AWS_ACCESS_KEY=$(xargs < /run/secrets/AWS_ACCESS_KEY)
 else
-  echo "Using AWS_ACCESS_KEY from environment."
+  echo "Using AWS_ACCESS_KEY from environment"
 fi
 
 if [ "$AWS_SECRET_KEY" = "" ]; then
-  echo "Using AWS_SECRET_KEY from docker secrets."
+  echo "Using AWS_SECRET_KEY from docker secrets"
   AWS_SECRET_KEY=$(xargs < /run/secrets/AWS_SECRET_KEY)
 else
-  echo "Using AWS_SECRET_KEY from environment."
+  echo "Using AWS_SECRET_KEY from environment"
 fi
 
 aws configure set aws_secret_access_key "$AWS_SECRET_KEY"
