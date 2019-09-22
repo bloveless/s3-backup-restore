@@ -38,7 +38,7 @@ aws configure set default.region "$AWS_REGION"
 cat << EOF > /root/.env.sh
 export AWS_REGION=$AWS_REGION
 export BACKUP_ARGS=$BACKUP_ARGS
-export CHOWN_ENABLE=$CHWON_ENABLE
+export CHOWN_ENABLE=$CHOWN_ENABLE
 export CHOWN_UID=$CHOWN_UID
 export CHOWN_GID=$CHOWN_GID
 export DATA_DIRECTORY=$DATA_DIRECTORY
@@ -60,19 +60,19 @@ if [ "$ENABLE_SCHEDULE" = "true" ]; then
   echo "" | crontab -u root -
 
   if [ "$NUM_HOURLY_BACKUPS" -gt 0 ]; then
-    (crontab -u root -l ; echo "$CADENCE_HOURLY /home/app/run.sh hourly >> /var/log/run.log 2>&1") | crontab -u root -
+    (crontab -u root -l ; echo "$CADENCE_HOURLY /root/run.sh hourly >> /var/log/run.log 2>&1") | crontab -u root -
   fi
 
   if [ "$NUM_DAILY_BACKUPS" -gt 0 ]; then
-    (crontab -u root -l ; echo "$CADENCE_DAILY /home/app/run.sh daily >> /var/log/run.log 2>&1") | crontab -u root -
+    (crontab -u root -l ; echo "$CADENCE_DAILY /root/run.sh daily >> /var/log/run.log 2>&1") | crontab -u root -
   fi
 
   if [ "$NUM_WEEKLY_BACKUPS" -gt 0 ]; then
-    (crontab -u root -l ; echo "$CADENCE_WEEKLY /home/app/run.sh weekly >> /var/log/run.log 2>&1") | crontab -u root -
+    (crontab -u root -l ; echo "$CADENCE_WEEKLY /root/run.sh weekly >> /var/log/run.log 2>&1") | crontab -u root -
   fi
 
   if [ "$NUM_MONTHLY_BACKUPS" -gt 0 ]; then
-    (crontab -u root -l ; echo "$CADENCE_MONTHLY /home/app/run.sh monthly >> /var/log/run.log 2>&1") | crontab -u root -
+    (crontab -u root -l ; echo "$CADENCE_MONTHLY /root/run.sh monthly >> /var/log/run.log 2>&1") | crontab -u root -
   fi
 
   crond -f -l 8 -d 8 -L /dev/stdout
