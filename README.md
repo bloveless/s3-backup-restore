@@ -127,7 +127,7 @@ backing up the files periodically.
 ```
 
 Note that the above snippet shows that the schedule is disabled (ENABLE_SCHEDULE="false") since this init container will
-be used only for restoring data before the container which uses the public-data pvc starts.
+be used only for restoring data before the container which uses the public-files volume mount.
 
 ```yaml
       containers:
