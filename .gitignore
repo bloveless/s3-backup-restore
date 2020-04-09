@@ -1,5 +1,6 @@
 .idea
 .DS_Store
 test-data
-deploy/docker/dev-secrets/*
-!deploy/docker/dev-secrets/.gitkeep
+tmp
+docker/dev-secrets/*
+!docker/dev-secrets/.gitkeep

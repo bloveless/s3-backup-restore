@@ -1,24 +1,28 @@
 version: '3.7'
 
 services:
-  python:
+  s3-backup-restore:
     build:
       context: .
-      dockerfile: deploy/docker/python/Dockerfile
+      dockerfile: docker/Dockerfile
     environment:
       AWS_REGION: us-west-2
       DATA_DIRECTORY: /data
       S3_PATH: s3://demon-backup/test-backup
     volumes:
-      - ./s3-backup-restore/entrypoint.sh:/root/entrypoint.sh
-      - ./s3-backup-restore/run.sh:/root/run.sh
       - ./test-data:/data
+      - ./:/app
+      - ./tmp:/tmp
     secrets:
       - AWS_ACCESS_KEY
       - AWS_SECRET_KEY
+    command:
+      - go
+      - run
+      - main.go
 
 secrets:
   AWS_ACCESS_KEY:
-    file: ./deploy/docker/dev-secrets/AWS_ACCESS_KEY
+    file: ./docker/dev-secrets/AWS_ACCESS_KEY
   AWS_SECRET_KEY:
-    file: ./deploy/docker/dev-secrets/AWS_SECRET_KEY
+    file: ./docker/dev-secrets/AWS_SECRET_KEY
