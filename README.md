@@ -26,8 +26,6 @@ You can configure the backup and restore using the following environment variabl
 
 `AWS_SECRET_KEY`: The AWS secret key with permission to write to your S3 bucket. May be omitted if using docker secrets.
 
-`BACKUP_ARGS`: Any additional flags you'd like to pass to the aws sync command on backup. I.E. "--follow-symlinks"
-
 `CADENCE_HOURLY`: Cron schedule for running hourly backups. Defaults to "0 * * * *".
 
 `CADENCE_DAILY`: Cron schedule for running daily backups. Defaults to "10 1 * * *".
@@ -47,8 +45,8 @@ file will have it's owner modified. During restore, all restored files will have
 `DATA_DIRECTORY`: The directory where the volume is mounted and where the backup and restore will occur. Defaults to
 "/data".
 
-`ENABLE_SCHEDULE`: If set to false it will disable the schedule and exit after the first restore attempt. Use this
-setting for init containers or the container will never exit. Defaults to "true".
+`ENABLE_CRON`: If set to false it will disable the cron and exit after the first restore attempt. Use this
+setting for init containers, or the container will never exit. Defaults to "true".
 
 `NUM_HOURLY_BACKUPS`: The number of hourly backups to keep. Can be disabled by setting to 0. Defaults to 3.
 
@@ -58,13 +56,8 @@ setting for init containers or the container will never exit. Defaults to "true"
 
 `NUM_MONTLY_BACKUPS`: The number of montly backups to keep. Can be disabled by setting to 0. Defaults to 3.
 
-`RESTORE_ARGS`: Any additional flags you'd like to pass to the aws sync command on restore. I.E. "--follow-symlinks"
-
 `RESTORE_DATE`: Set this if you'd like to restore from a specific date. NOTE: This should exactly match the date folder
 within the S3 bucket. I.E. "hourly/2019-09-21T19:35:32Z"
-
-`RESTORE_DELETE`: If you like the aws sync command to remove any files locally that don't match your remote backup.
-This adds the --delete flag to the aws sync command. Defaults to "false".
 
 `RESTORE_FORCE`: If you'd like to force a restore set this to "true". Defaults to "false".
 
@@ -102,12 +95,12 @@ backing up the files periodically.
             - name: public-files
               mountPath: /data
           env:
-            - name: AWS_ACCESS_KEY
+            - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
                   name: backup-keys
                   key: aws_access_key
-            - name: AWS_SECRET_KEY
+            - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: backup-keys
@@ -137,12 +130,12 @@ be used only for restoring data before the container which uses the public-files
             - name: public-files
               mountPath: /data
           env:
-            - name: AWS_ACCESS_KEY
+            - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
                   name: backup-keys
                   key: aws_access_key
-            - name: AWS_SECRET_KEY
+            - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: backup-keys

@@ -8,21 +8,15 @@ services:
     environment:
       AWS_REGION: us-west-2
       DATA_DIRECTORY: /data
-      S3_PATH: s3://demon-backup/test-backup
+      S3_BUCKET: s3-backup-restore-dev-test
+      ENABLE_CRON: "true"
     volumes:
       - ./test-data:/data
       - ./:/app
       - ./tmp:/tmp
-    secrets:
-      - AWS_ACCESS_KEY
-      - AWS_SECRET_KEY
+      - ./docker/dev-secrets/.aws:/root/.aws
+    tty: true
     command:
       - go
       - run
       - main.go
-
-secrets:
-  AWS_ACCESS_KEY:
-    file: ./docker/dev-secrets/AWS_ACCESS_KEY
-  AWS_SECRET_KEY:
-    file: ./docker/dev-secrets/AWS_SECRET_KEY
