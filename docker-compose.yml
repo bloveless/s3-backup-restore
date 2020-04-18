@@ -5,18 +5,19 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
+      target: builder
     environment:
       AWS_REGION: us-west-2
       DATA_DIRECTORY: /data
       S3_BUCKET: s3-backup-restore-dev-test
-      ENABLE_CRON: "true"
     volumes:
       - ./test-data:/data
       - ./:/app
-      - ./tmp:/tmp
       - ./docker/dev-secrets/.aws:/root/.aws
     tty: true
     command:
       - go
       - run
-      - main.go
+      - cmd/s3-backup-restore/main.go
+      - -v
+      - restore

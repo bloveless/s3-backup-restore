@@ -94,6 +94,7 @@ backing up the files periodically.
           volumeMounts:
             - name: public-files
               mountPath: /data
+          command: [restore]
           env:
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
@@ -113,8 +114,6 @@ backing up the files periodically.
               value: "83"
             - name: CHOWN_GID
               value: "2003"
-            - name: ENABLE_SCHEDULE
-              value: "false"
             - name: S3_PATH
               value: s3://<BUCKET>/<PATH>
 ```
@@ -129,6 +128,7 @@ be used only for restoring data before the container which uses the public-files
           volumeMounts:
             - name: public-files
               mountPath: /data
+          command: [backup]
           env:
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
