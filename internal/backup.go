@@ -22,8 +22,8 @@ import (
 type Backup struct {
 	HourlyBackups  int
 	DailyBackups   int
-	MonthlyBackups int
 	WeeklyBackups  int
+	MonthlyBackups int
 	S3Bucket       string
 	S3Path         string
 	DataDirectory  string
@@ -32,24 +32,25 @@ type Backup struct {
 }
 
 func (b Backup) Run(backupType string) {
+	log.Info("Beginning backup")
 	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
 
+	log.Info("Compressing directory")
 	archivePath := b.compressDirectory(now, backupType)
 
+	log.Info("Uploading to S3")
 	b.uploadToS3(now, backupType, archivePath)
 
+	log.Info("Pruning old backups from S3")
 	b.pruneS3(backupType)
 
+	log.Info("Removing temporary backup directory")
 	b.removeBackupDirectory()
+	log.Info("Backup complete")
 }
 
 func (b Backup) compressDirectory(now string, backupType string) string {
-	dataDirectory := os.Getenv("DATA_DIRECTORY")
-	if dataDirectory == "" {
-		dataDirectory = "/data"
-	}
-
-	backupFile, err := os.OpenFile(dataDirectory+"/BACKUP_DATE", os.O_WRONLY|os.O_CREATE, 0644)
+	backupFile, err := os.OpenFile(b.DataDirectory+"/BACKUP_DATE", os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -71,7 +72,7 @@ func (b Backup) compressDirectory(now string, backupType string) string {
 	defer tw.Close()
 
 	err = filepath.Walk(
-		dataDirectory,
+		b.DataDirectory,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -95,6 +96,7 @@ func (b Backup) compressDirectory(now string, backupType string) string {
 	}
 
 	log.Debugf("Output file: %s", file.Name())
+	log.Info("Archive created successfully")
 	return file.Name()
 }
 
@@ -106,9 +108,11 @@ func (b Backup) uploadToS3(now string, backupType string, path string) {
 	}
 	defer file.Close()
 
-	log.Infof("Output path: %s", path)
+	log.Debugf("Output path: %s", path)
 
 	uploadPath := fmt.Sprintf("%s/%s/%s.tar.gz", b.S3Path, backupType, now)
+
+	log.Debugf("Uploading to %s", uploadPath)
 
 	uploadInput := s3manager.UploadInput{
 		Body:   file,
@@ -166,6 +170,8 @@ func (b Backup) pruneS3(backupType string) {
 	if err != nil {
 		log.Fatal("Unable to delete old", err)
 	}
+
+	log.Info("S3 backups pruned successfully")
 }
 
 func (b Backup) removeBackupDirectory() {
@@ -178,11 +184,9 @@ func (b Backup) removeBackupDirectory() {
 
 func (b Backup) getBucketObjects(backupType string) []*s3.Object {
 	i := &s3.ListObjectsInput{
-		Bucket: aws.String("s3-backup-restore-dev-test"),
-		Prefix: aws.String(fmt.Sprintf("%s%s", b.S3Path, backupType)),
+		Bucket: aws.String(b.S3Bucket),
+		Prefix: aws.String(fmt.Sprintf("%s/%s", b.S3Path, backupType)),
 	}
-
-	fmt.Println(i)
 
 	o, err := b.S3Service.ListObjects(i)
 	if err != nil {
@@ -199,7 +203,6 @@ func (b Backup) addFile(tw *tar.Writer, path string) error {
 	}
 	defer file.Close()
 
-
 	if stat, err := file.Stat(); err == nil {
 		header, err := tar.FileInfoHeader(stat, path)
 		if err != nil {
@@ -208,7 +211,7 @@ func (b Backup) addFile(tw *tar.Writer, path string) error {
 
 		header.Name = strings.ReplaceAll(path, b.DataDirectory + "/", "")
 
-		log.Debugf("Adding file: %s => %s", path, header.Name)
+		log.Infof("Adding file: %s => %s", path, header.Name)
 
 		if err := tw.WriteHeader(header); err != nil {
 			return err

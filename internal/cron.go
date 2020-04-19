@@ -8,14 +8,14 @@ import (
 )
 
 type Cron struct {
-	HourlyCadence string
-	DailyCadence string
-	WeeklyCadence string
+	HourlyCadence  string
+	DailyCadence   string
+	WeeklyCadence  string
 	MonthlyCadence string
 	HourlyBackups  int
 	DailyBackups   int
-	MonthlyBackups int
 	WeeklyBackups  int
+	MonthlyBackups int
 	S3Bucket       string
 	S3Path         string
 	DataDirectory  string
@@ -50,5 +50,5 @@ func (c Cron) Run() {
 	cr.AddFunc(c.MonthlyCadence, func() { b.Run("monthly") })
 
 	log.Info("Starting cron")
-	c.Run()
+	cr.Run()
 }

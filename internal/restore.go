@@ -42,27 +42,70 @@ type Restore struct {
 	S3Bucket                string
 	S3Path                  string
 	DataDirectory           string
+	NewDirectoryPermissions os.FileMode
+	ChownEnable             bool
+	ChownUid                int
+	ChownGid                int
+	ForceRestore            bool
+	RestoreFile             string
 	AwsSession              *session.Session
 	S3Service               s3iface.S3API
-	NewFilePermissions      os.FileMode
-	NewDirectoryPermissions os.FileMode
 }
 
 func (r Restore) Run() {
-	latestBackup, err := r.getLatestBackup()
-	if err != nil {
-		log.Fatal(err)
+	log.Info("Beginning restore")
+	if r.ForceRestore == false && r.isDataDirectoryIsEmpty() != true {
+		log.Info("Cowardly refusing to restore to a folder full of files")
+		return
 	}
 
-	backupFilePath, err := r.downloadBackup(latestBackup)
+	backupPath := r.S3Path + "/" + r.RestoreFile
+	if backupPath == "" {
+		log.Info("Getting latest backup from S3")
+		b, err := r.getLatestBackup()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		backupPath = b
+	} else {
+		log.Infof("Restoring user requested backup: %s", backupPath)
+	}
+
+	log.Info("Downloading backup from S3")
+	backupFilePath, err := r.downloadBackup(backupPath)
 	if err != nil {
 		log.Fatal("Unable to download backup file ", err)
 	}
 
+	log.Info("Restoring backup")
 	err = r.restoreBackup(backupFilePath)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if r.ChownEnable {
+		log.Info("Updating permissions on restored files")
+		err = r.updatePermissions()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	log.Info("Finished restore")
+}
+
+func (r Restore) isDataDirectoryIsEmpty() bool {
+	files, err := ioutil.ReadDir(r.DataDirectory)
+	if err != nil {
+		return false
+	}
+
+	if len(files) > 0 {
+		return false
+	}
+
+	return true
 }
 
 func (r Restore) getLatestBackup() (string, error) {
@@ -87,6 +130,7 @@ func (r Restore) getLatestBackup() (string, error) {
 
 	sort.Sort(sort.Reverse(byTimestamp(keys)))
 
+	log.Infof("Found latest backup: %s", keys[0])
 	return keys[0], nil
 }
 
@@ -101,7 +145,7 @@ func (r Restore) downloadBackup(backupName string) (string, error) {
 
 	i := &s3.GetObjectInput{
 		Bucket: aws.String(r.S3Bucket),
-		Key: aws.String(backupName),
+		Key:    aws.String(backupName),
 	}
 
 	n, err := downloader.Download(f, i)
@@ -109,11 +153,10 @@ func (r Restore) downloadBackup(backupName string) (string, error) {
 		return "", err
 	}
 
-	log.Debugf("Downloaded %d bytes", n)
+	log.Infof("Downloaded %d bytes", n)
 	return f.Name(), nil
 }
 
-// restoreBackup will replace any files in the directory that overlap with the backup
 func (r Restore) restoreBackup(backupFilePath string) error {
 	f, err := os.Open(backupFilePath)
 	if err != nil {
@@ -143,7 +186,6 @@ func (r Restore) restoreBackup(backupFilePath string) error {
 
 		switch header.Typeflag {
 		case tar.TypeDir:
-			log.Debugf("Create directory %s", name)
 			continue
 		case tar.TypeReg:
 			dir := filepath.Dir(name)
@@ -152,9 +194,9 @@ func (r Restore) restoreBackup(backupFilePath string) error {
 				return err
 			}
 
-			log.Debugf("File %s size %d", name, header.Size)
+			log.Infof("Restored file %s", name)
 
-			outFile, err := os.Create(name)
+			outFile, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, header.FileInfo().Mode().Perm())
 			if err != nil {
 				return err
 			}
@@ -163,9 +205,10 @@ func (r Restore) restoreBackup(backupFilePath string) error {
 			if err != nil {
 				return err
 			}
+
+			outFile.Close()
 		default:
-			fmt.Printf("%s : %c %s %s\n",
-				"Yikes! Unable to figure out type",
+			log.Errorf("Unable to figure out type: %c %s %s",
 				header.Typeflag,
 				"in file",
 				name,
@@ -173,5 +216,18 @@ func (r Restore) restoreBackup(backupFilePath string) error {
 		}
 	}
 
+	log.Info("Backup restored")
 	return nil
+}
+
+func (r Restore) updatePermissions() error {
+	err := filepath.Walk(
+		r.DataDirectory,
+		func(path string, info os.FileInfo, err error) error {
+			return os.Chown(path, r.ChownUid, r.ChownGid)
+		},
+	)
+
+	log.Info("Data directory permissions updated")
+	return err
 }

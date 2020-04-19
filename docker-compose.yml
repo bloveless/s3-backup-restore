@@ -10,14 +10,21 @@ services:
       AWS_REGION: us-west-2
       DATA_DIRECTORY: /data
       S3_BUCKET: s3-backup-restore-dev-test
+      S3_PATH: s3-backup-restore
+      CHOWN_ENABLE: "true"
+      CHOWN_UID: 1001
+      CHOWN_GID: 1001
+      RESTORE_FORCE: "true"
+      CADENCE_HOURLY: "* * * * *"
     volumes:
       - ./test-data:/data
       - ./:/app
       - ./docker/dev-secrets/.aws:/root/.aws
     tty: true
-    command:
+    entrypoint:
       - go
       - run
       - cmd/s3-backup-restore/main.go
-      - -v
-      - restore
+    command:
+      - -vv
+      - cron

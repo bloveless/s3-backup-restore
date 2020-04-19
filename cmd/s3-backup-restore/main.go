@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -13,21 +14,21 @@ import (
 )
 
 func main() {
-	verbose := flag.Bool("v", false, "Verbose")
+	verbose := flag.Bool("v", false, "Show verbose output.")
+	veryVerbose := flag.Bool("vv", false, "Show very verbose output.")
+	showHelp := flag.Bool("h", false, "Show this screen.")
 	flag.Parse()
+
+	if *showHelp || len(flag.Args()) < 1 {
+		printHelp()
+		return
+	}
 
 	log.SetOutput(os.Stdout)
 	if *verbose {
 		log.SetLevel(log.DebugLevel)
 	} else {
 		log.SetLevel(log.InfoLevel)
-	}
-
-	if len(flag.Args()) < 1 {
-		log.Info("usage: s3-backup-restore [options] [operation:backup,restore,cron] [backup-type:hourly,daily,weekly,monthly]")
-		log.Info("options:")
-		log.Info("    -v verbose")
-		return
 	}
 
 	command := flag.Arg(0)
@@ -37,18 +38,16 @@ func main() {
 	}))
 
 	s3Config := aws.NewConfig()
-	// if *verbose {
-	// 	s3Config = aws.NewConfig().WithLogLevel(aws.LogDebugWithHTTPBody)
-	// }
+	if *veryVerbose {
+		s3Config = aws.NewConfig().WithLogLevel(aws.LogDebugWithHTTPBody)
+	}
 	s3Service := s3.New(awsSession, s3Config)
 
 	switch command {
 	case "backup":
 		if len(flag.Args()) < 2 {
 			log.Warn("The backup operation requires a backup-type.")
-			log.Info("usage: s3-backup-restore [options] [operation:backup,restore,cron] [backup-type:hourly,daily,weekly,monthly]")
-			log.Info("options:")
-			log.Info("    -v verbose")
+			printHelp()
 			return
 		}
 
@@ -59,7 +58,7 @@ func main() {
 			MonthlyBackups: getEnvIntOrDefault("NUM_MONTHLY_BACKUPS", 3),
 			S3Bucket:       getEnvOrFatal("S3_BUCKET"),
 			S3Path:         trimTrailingSlash(getEnvStrOrDefault("S3_PATH", "/")),
-			DataDirectory:  getEnvOrFatal("DATA_DIRECTORY"),
+			DataDirectory:  trimTrailingSlash(getEnvStrOrDefault("DATA_DIRECTORY", "/data")),
 			AwsSession:     awsSession,
 			S3Service:      s3Service,
 		}
@@ -69,11 +68,15 @@ func main() {
 		r := internal.Restore{
 			S3Bucket:                getEnvOrFatal("S3_BUCKET"),
 			S3Path:                  trimTrailingSlash(getEnvStrOrDefault("S3_PATH", "/")),
-			DataDirectory:           getEnvOrFatal("DATA_DIRECTORY"),
+			DataDirectory:           trimTrailingSlash(getEnvStrOrDefault("DATA_DIRECTORY", "/data")),
+			NewDirectoryPermissions: os.FileMode(getEnvIntOrDefault("DIRECTORY_PERMISSIONS", 0755)),
+			ChownEnable:             getEnvStrOrDefault("CHOWN_ENABLE", "false") == "true",
+			ChownUid:                getEnvIntOrDefault("CHOWN_UID", 1000),
+			ChownGid:                getEnvIntOrDefault("CHOWN_GID", 1000),
+			ForceRestore:            getEnvBoolOrDefault("RESTORE_FORCE", false),
+			RestoreFile:             os.Getenv("RESTORE_FILE"),
 			AwsSession:              awsSession,
 			S3Service:               s3Service,
-			NewFilePermissions:      0644,
-			NewDirectoryPermissions: 0755,
 		}
 
 		r.Run()
@@ -83,19 +86,31 @@ func main() {
 			DailyCadence:   getEnvStrOrDefault("CADENCE_DAILY", "10 1 * * *"),
 			WeeklyCadence:  getEnvStrOrDefault("CADENCE_WEEKLY", "10 2 * * 0"),
 			MonthlyCadence: getEnvStrOrDefault("CADENCE_MONTHLY", "10 3 1 * *"),
-			HourlyBackups:  getEnvIntOrDefault("NUM_HOURLY_BACKUPS", 3),
-			DailyBackups:   getEnvIntOrDefault("NUM_DAILY_BACKUPS", 3),
-			WeeklyBackups:  getEnvIntOrDefault("NUM_WEEKLY_BACKUPS", 3),
-			MonthlyBackups: getEnvIntOrDefault("NUM_MONTHLY_BACKUPS", 3),
+			HourlyBackups:  getEnvIntOrDefault("NUM_BACKUPS_HOURLY", 3),
+			DailyBackups:   getEnvIntOrDefault("NUM_BACKUPS_DAILY", 3),
+			WeeklyBackups:  getEnvIntOrDefault("NUM_BACKUPS_WEEKLY", 3),
+			MonthlyBackups: getEnvIntOrDefault("NUM_BACKUPS_MONTHLY", 3),
 			S3Bucket:       getEnvOrFatal("S3_BUCKET"),
 			S3Path:         trimTrailingSlash(getEnvStrOrDefault("S3_PATH", "/")),
-			DataDirectory:  getEnvOrFatal("DATA_DIRECTORY"),
+			DataDirectory:  trimTrailingSlash(getEnvStrOrDefault("DATA_DIRECTORY", "/data")),
 			AwsSession:     awsSession,
 			S3Service:      s3Service,
 		}
 
 		c.Run()
 	}
+}
+
+func printHelp() {
+	fmt.Println("Usage:")
+	fmt.Println("  s3-backup-restore [options] backup (hourly|daily|weekly|monthly)")
+	fmt.Println("  s3-backup-restore [options] restore")
+	fmt.Println("  s3-backup-restore [options] cron")
+	fmt.Println("")
+	fmt.Println("Options:")
+	fmt.Println("  -h  Show this screen.")
+	fmt.Println("  -v  Show verbose output.")
+	fmt.Println("  -vv Show very verbose output.")
 }
 
 func getEnvStrOrDefault(envName string, defaultValue string) string {
@@ -119,6 +134,15 @@ func getEnvIntOrDefault(envName string, defaultValue int) int {
 	}
 
 	return envValueInt
+}
+
+func getEnvBoolOrDefault(envName string, defaultValue bool) bool {
+	envValue := os.Getenv(envName)
+	if envValue == "" {
+		return defaultValue
+	}
+
+	return envValue == "true"
 }
 
 func getEnvOrFatal(envName string) string {
