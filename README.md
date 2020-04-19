@@ -65,8 +65,8 @@ have it's ownership changed including files that weren't contained in the backup
 `RESTORE_FILE`: Set this if you'd like to restore from a specific date. NOTE: This should exactly match the date folder
 within the S3 bucket. I.E. "hourly/2019-09-21T19:35:32Z.tar.gz" the S3_PATH will be added automatically.
 
-`RESTORE_FORCE`: You can force a restore by setting this to "true". Defaults to "false". This will ignore if the
-directory already has files in it.
+`RESTORE_FORCE`: You can force a restore by setting this to "true". This will ignore if the directory already has files
+in it. Defaults to "false". 
 
 ## Notes
 Restore will update existing files but will not remove files that haven't been backed up before. You may request that
