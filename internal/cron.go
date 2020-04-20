@@ -44,10 +44,21 @@ func (c Cron) Run() {
 		S3Service:      c.S3Service,
 	}
 
-	cr.AddFunc(c.HourlyCadence, func() { b.Run("hourly") })
-	cr.AddFunc(c.DailyCadence, func() { b.Run("daily") })
-	cr.AddFunc(c.WeeklyCadence, func() { b.Run("weekly") })
-	cr.AddFunc(c.MonthlyCadence, func() { b.Run("monthly") })
+	if b.HourlyBackups > 0 {
+		cr.AddFunc(c.HourlyCadence, func() { b.Run("hourly") })
+	}
+
+	if b.DailyBackups > 0 {
+		cr.AddFunc(c.DailyCadence, func() { b.Run("daily") })
+	}
+
+	if b.WeeklyBackups > 0 {
+		cr.AddFunc(c.WeeklyCadence, func() { b.Run("weekly") })
+	}
+
+	if b.WeeklyBackups > 0 {
+		cr.AddFunc(c.MonthlyCadence, func() { b.Run("monthly") })
+	}
 
 	log.Info("Starting cron")
 	cr.Run()
