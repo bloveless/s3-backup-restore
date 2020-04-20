@@ -56,7 +56,7 @@ func (c Cron) Run() {
 		cr.AddFunc(c.WeeklyCadence, func() { b.Run("weekly") })
 	}
 
-	if b.WeeklyBackups > 0 {
+	if b.MonthlyBackups > 0 {
 		cr.AddFunc(c.MonthlyCadence, func() { b.Run("monthly") })
 	}
 
