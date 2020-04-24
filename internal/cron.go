@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Cron contains the config necessary to run a backup cron
 type Cron struct {
 	HourlyCadence  string
 	DailyCadence   string
@@ -23,6 +24,7 @@ type Cron struct {
 	S3Service      s3iface.S3API
 }
 
+// Run begins the backup cron
 func (c Cron) Run() {
 	cr := cron.New(
 		cron.WithLogger(

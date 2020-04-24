@@ -4,12 +4,6 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"os"
@@ -17,8 +11,16 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	log "github.com/sirupsen/logrus"
 )
 
+// Backup contains the configuration required for doing a backup
 type Backup struct {
 	HourlyBackups  int
 	DailyBackups   int
@@ -31,6 +33,7 @@ type Backup struct {
 	S3Service      s3iface.S3API
 }
 
+// Run performs a backup
 func (b Backup) Run(backupType string) {
 	log.Info("Beginning backup")
 	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
@@ -157,7 +160,7 @@ func (b Backup) pruneS3(backupType string) {
 		deleteObjects = append(deleteObjects, s3manager.BatchDeleteObject{
 			Object: &s3.DeleteObjectInput{
 				Bucket: aws.String(b.S3Bucket),
-				Key: aws.String(k),
+				Key:    aws.String(k),
 			},
 		})
 	}
@@ -209,7 +212,7 @@ func (b Backup) addFile(tw *tar.Writer, path string) error {
 			return err
 		}
 
-		header.Name = strings.ReplaceAll(path, b.DataDirectory + "/", "")
+		header.Name = strings.ReplaceAll(path, b.DataDirectory+"/", "")
 
 		log.Infof("Adding file: %s => %s", path, header.Name)
 

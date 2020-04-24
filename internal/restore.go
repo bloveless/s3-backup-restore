@@ -5,18 +5,19 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	log "github.com/sirupsen/logrus"
 )
 
 type byTimestamp []string
@@ -30,28 +31,30 @@ func (s byTimestamp) Swap(i, j int) {
 }
 
 func (s byTimestamp) Less(i, j int) bool {
-	iSplit := strings.Index(s[i], "/")
-	jSplit := strings.Index(s[j], "/")
+	iSplit := strings.LastIndex(s[i], "/")
+	jSplit := strings.LastIndex(s[j], "/")
 
 	// format is hourly/2020-04-15T12:35:00Z.tar.gz
 	// compare only the timestamp and not the backup type
 	return s[i][iSplit:] < s[j][jSplit:]
 }
 
+// Restore contains the config necessary to run a restore
 type Restore struct {
 	S3Bucket                string
 	S3Path                  string
 	DataDirectory           string
 	NewDirectoryPermissions os.FileMode
 	ChownEnable             bool
-	ChownUid                int
-	ChownGid                int
+	ChownUID                int
+	ChownGID                int
 	ForceRestore            bool
 	RestoreFile             string
 	AwsSession              *session.Session
 	S3Service               s3iface.S3API
 }
 
+// Run performs a restore
 func (r Restore) Run() {
 	log.Info("Beginning restore")
 	if r.ForceRestore == false && r.isDataDirectoryIsEmpty() != true {
@@ -60,7 +63,7 @@ func (r Restore) Run() {
 	}
 
 	backupPath := r.S3Path + "/" + r.RestoreFile
-	if backupPath == "" {
+	if r.RestoreFile == "" {
 		log.Info("Getting latest backup from S3")
 		b, err := r.getLatestBackup()
 		if err != nil {
@@ -224,7 +227,7 @@ func (r Restore) updatePermissions() error {
 	err := filepath.Walk(
 		r.DataDirectory,
 		func(path string, info os.FileInfo, err error) error {
-			return os.Chown(path, r.ChownUid, r.ChownGid)
+			return os.Chown(path, r.ChownUID, r.ChownGID)
 		},
 	)
 

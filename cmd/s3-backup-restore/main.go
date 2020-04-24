@@ -3,14 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"s3-backup-restore/internal"
 	"strconv"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -71,8 +72,8 @@ func main() {
 			DataDirectory:           trimTrailingSlash(getEnvStrOrDefault("DATA_DIRECTORY", "/data")),
 			NewDirectoryPermissions: os.FileMode(getEnvIntOrDefault("DIRECTORY_PERMISSIONS", 0755)),
 			ChownEnable:             getEnvStrOrDefault("CHOWN_ENABLE", "false") == "true",
-			ChownUid:                getEnvIntOrDefault("CHOWN_UID", 1000),
-			ChownGid:                getEnvIntOrDefault("CHOWN_GID", 1000),
+			ChownUID:                getEnvIntOrDefault("CHOWN_UID", 1000),
+			ChownGID:                getEnvIntOrDefault("CHOWN_GID", 1000),
 			ForceRestore:            getEnvBoolOrDefault("RESTORE_FORCE", false),
 			RestoreFile:             os.Getenv("RESTORE_FILE"),
 			AwsSession:              awsSession,
