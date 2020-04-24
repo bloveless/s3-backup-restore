@@ -93,7 +93,7 @@ responsible for running the backup cron and backing up the files periodically.
 ```yaml
       initContainers:
         - name: s3-restore
-          image: bloveless/s3-backup-restore:1.0.0
+          image: bloveless/s3-backup-restore:1.0.2
           volumeMounts:
             - name: public-files
               mountPath: /data
@@ -124,7 +124,7 @@ responsible for running the backup cron and backing up the files periodically.
               value: "1000"
       containers:
         - name: s3-backup
-          image: bloveless/s3-backup-restore:1.0.0
+          image: bloveless/s3-backup-restore:1.0.2
           volumeMounts:
             - name: public-files
               mountPath: /data
