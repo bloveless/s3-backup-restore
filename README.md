@@ -128,7 +128,7 @@ responsible for running the backup cron and backing up the files periodically.
           volumeMounts:
             - name: public-files
               mountPath: /data
-          command: ["cron"]
+          args: ["cron"]
           env:
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
