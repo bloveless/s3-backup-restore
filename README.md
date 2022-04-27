@@ -1,6 +1,8 @@
 # S3 Backup and Restore
 A docker image for backing up and restoring data from s3.
 
+**This image has been moved to bloveless/docker-images**
+
 ## Description
 Automatic backups to s3. Automatic restores from s3 if the volume is completely empty (configurable).
 Allow forced restores which will overwrite everything in the mounted volume.
@@ -66,7 +68,7 @@ have it's ownership changed including files that weren't contained in the backup
 within the S3 bucket. I.E. "hourly/2019-09-21T19:35:32Z.tar.gz" the S3_PATH will be added automatically.
 
 `RESTORE_FORCE`: You can force a restore by setting this to "true". This will ignore if the directory already has files
-in it. Defaults to "false". 
+in it. Defaults to "false".
 
 ## Notes
 Restore will update existing files but will not remove files that haven't been backed up before. You may request that
